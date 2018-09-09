@@ -5,22 +5,49 @@ import {
   Text,
   View
 } from 'react-native';
-import WkWebView from 'react-native-wkwebview-reborn';
+import {WKWebView, WKCookieManager} from 'react-native-wkwebview-reborn';
 
 export default class example extends Component {
+  constructor(props) {
+        super(props);
+        WKCookieManager.setCookie("testInitial", "value set from constructor", "https://example.org/")
+        this.state = {source: { uri: 'https://example.org/'}};
+  }
+
+  async setCookie(){
+    let rand = Math.random()
+    await WKCookieManager.setCookie("test", "value set from setCookie() " + rand, "https://example.org/")
+    this.setState({source: { uri: 'https://example.org/?'+rand }});
+  }
+
+  async getCookie(){
+    let val = await WKCookieManager.getCookie("test", "https://example.org/");
+    console.log("GET COOKIE test = " + val);
+    this.webview.reload()
+  }
+
+  async clearCookie(){
+    let rand = Math.random()
+    await WKCookieManager.clearCookies("https://example.org/")
+    this.setState({source: { uri: 'https://example.org/?'+rand }});
+  }
+
   render() {
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
-        <WkWebView style={{ backgroundColor: '#ff0000' }}
+        <WKWebView style={{ backgroundColor: '#ff0000' }}
           contentInsetAdjustmentBehavior="always"
           userAgent="MyFancyWebView"
           hideKeyboardAccessoryView={false}
           ref={(c) => this.webview = c}
           sendCookies={true}
-          source={{ uri: 'https://example.org/', cookies: {'testCookieName' : 'testCookieValue'} }}
+          source={this.state.source}
           onMessage={(e) => console.log(e.nativeEvent)}
-          injectedJavaScript="window.postMessage('Hello from WkWebView');"
+          injectedJavaScript="window.postMessage('Hello from WkWebView'); setTimeout(function(){alert(document.cookie); console.log(document.cookie);}, 1000);"
         />
+        <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.setCookie.bind(this)}>Set Cookie</Text>
+        <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.getCookie.bind(this)}>Get Cookie</Text>
+        <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.clearCookie.bind(this)}>Clear Cookie</Text>
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={() => this.webview.reload()}>Reload</Text>
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={() => this.webview.postMessage("Hello from React Native")}>Post Message</Text>
       </View>

@@ -1,5 +1,12 @@
 'use strict';
 
+import React from 'react';
+import ReactNative, {
+  NativeModules
+} from 'react-native';
+
 import WKWebView from './WKWebView';
 
-export default WKWebView;
+const WKCookieManager = NativeModules.WKCookieManager;
+
+export {WKWebView, WKCookieManager};
