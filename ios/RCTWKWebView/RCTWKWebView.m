@@ -164,14 +164,33 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)loadRequest:(NSURLRequest *)request
 {
   if (request.URL && _sendCookies) {
-    NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:request.URL];
-    NSDictionary *cookiesRequestHeaderFields = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
-    NSLog(@"%@", cookiesRequestHeaderFields[@"Cookie"]);
-    if ([cookiesRequestHeaderFields objectForKey:@"Cookie"]) {
-      NSMutableURLRequest *mutableRequest = request.mutableCopy;
-      [mutableRequest addValue:cookiesRequestHeaderFields[@"Cookie"] forHTTPHeaderField:@"Cookie"];
-      request = mutableRequest;
-      [request HTTPShouldHandleCookies];
+    if (@available(iOS 11, *)) {
+      WKHTTPCookieStore* wkCookieStore = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
+      [wkCookieStore getAllCookies:^(NSArray<NSHTTPCookie *> * _Nonnull fetchedCookies) {
+        NSMutableArray<NSHTTPCookie*>* domainCookies = [NSMutableArray array];
+        for( NSHTTPCookie* cookie in fetchedCookies ){
+          if([cookie.domain isEqualToString:request.URL.host]){
+            [domainCookies addObject:cookie];
+          }
+        }
+        NSDictionary *cookiesRequestHeaderFields = [NSHTTPCookie requestHeaderFieldsWithCookies:domainCookies];
+        if ([cookiesRequestHeaderFields objectForKey:@"Cookie"]) {
+          NSMutableURLRequest *mutableRequest = request.mutableCopy;
+          [mutableRequest addValue:cookiesRequestHeaderFields[@"Cookie"] forHTTPHeaderField:@"Cookie"];
+          //          [mutableRequest HTTPShouldHandleCookies];
+          [_webView loadRequest:mutableRequest];
+        }
+      }];
+      return;
+    }else {
+      NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:request.URL];
+      NSDictionary *cookiesRequestHeaderFields = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
+      if ([cookiesRequestHeaderFields objectForKey:@"Cookie"]) {
+        NSMutableURLRequest *mutableRequest = request.mutableCopy;
+        [mutableRequest addValue:cookiesRequestHeaderFields[@"Cookie"] forHTTPHeaderField:@"Cookie"];
+        request = mutableRequest;
+        [request HTTPShouldHandleCookies];
+      }
     }
   }
   
@@ -179,14 +198,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 -(void)setJavascriptCookies:(NSURL*)url{
-  NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:url];
-  NSMutableString* javascriptCookiesString = [NSMutableString string];
-  for(NSHTTPCookie* cookie in [cookies reverseObjectEnumerator]){
-    [javascriptCookiesString appendFormat:@"document.cookie='%@';", [self cookieDescription:cookie]];
+  if (@available(iOS 11, *)) {
+    // Do nothing
+  }else {
+    NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:url];
+    NSMutableString* javascriptCookiesString = [NSMutableString string];
+    for(NSHTTPCookie* cookie in [cookies reverseObjectEnumerator]){
+      [javascriptCookiesString appendFormat:@"document.cookie='%@';", [self cookieDescription:cookie]];
+    }
+    _injectJavaScriptCookies = javascriptCookiesString;
+    
+    [self resetInjectJavaScript];
   }
-  _injectJavaScriptCookies = javascriptCookiesString;
-  
-  [self resetInjectJavaScript];
 }
 
 - (NSString *) cookieDescription:(NSHTTPCookie *)cookie {
@@ -382,34 +405,46 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }
     
     NSURLRequest *request = [RCTConvert NSURLRequest:source];
+    NSURL* url = request.URL;
     
-    if ( source[@"cookies"] != nil ){
+    if ( (source[@"cookies"] != nil) && (url != nil)){
       if ( [source[@"cookies"] isKindOfClass:[NSDictionary class]] ){
         
         NSDictionary* cookies = (NSDictionary*)source[@"cookies"];
-        
+        __block NSUInteger cookiesCount = 0;
+        __block NSUInteger cookiesIndex = 0;
         for ( NSString* key in cookies ){
           NSString* value = cookies[key];
           if( value != nil ){
-            NSURL* url = request.URL;
-            if (url != nil){
-              NSDictionary* props = [NSDictionary dictionaryWithObjectsAndKeys:
-                                     url.host, NSHTTPCookieDomain,
-                                     url.path, NSHTTPCookiePath,
-                                     key, NSHTTPCookieName,
-                                     value,NSHTTPCookieValue,nil];
-              NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties:props];
-              if (@available(iOS 11, *)) {
-                WKHTTPCookieStore* wkCookieStore = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
-                dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-                [wkCookieStore setCookie:cookie completionHandler:^{
-                  dispatch_semaphore_signal(sema);
-                }];
-                dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-              }else {
-                [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
-              }
+            cookiesCount++;
+          }
+        }
+        for ( NSString* key in cookies ){
+          NSString* value = cookies[key];
+          if( value != nil ){
+            
+            NSDictionary* props = [NSDictionary dictionaryWithObjectsAndKeys:
+                                   url.host, NSHTTPCookieDomain,
+                                   url.path, NSHTTPCookiePath,
+                                   key, NSHTTPCookieName,
+                                   value,NSHTTPCookieValue,
+                                   @"86400", NSHTTPCookieMaximumAge, nil];
+            NSHTTPCookie* cookie = [NSHTTPCookie cookieWithProperties:props];
+            if (@available(iOS 11, *)) {
+              
+              WKHTTPCookieStore* wkCookieStore = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
+              [wkCookieStore setCookie:cookie completionHandler:^{
+                cookiesIndex++;
+                if (cookiesIndex == cookiesCount){
+                  [self loadRequest:request];
+                }
+              }];
+              
+              return;
+            }else {
+              [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
             }
+            
           }
         }
       }
@@ -687,4 +722,3 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 }
 
 @end
-

@@ -10,13 +10,12 @@ import {WKWebView, WKCookieManager} from 'react-native-wkwebview-reborn';
 export default class example extends Component {
   constructor(props) {
         super(props);
-        WKCookieManager.setCookie("testInitial", "value set from constructor", "https://example.org/")
-        this.state = {source: { uri: 'https://example.org/'}};
+        this.state = {source: { uri: 'https://example.org/', cookies: {'testInitial' : 'from constructor'}}};
   }
 
   async setCookie(){
     let rand = Math.random()
-    await WKCookieManager.setCookie("test", "value set from setCookie() " + rand, "https://example.org/")
+    await WKCookieManager.setCookie("test", "value set from setCookie() " + rand, 600, "https://example.org/" )
     this.setState({source: { uri: 'https://example.org/?'+rand }});
   }
 

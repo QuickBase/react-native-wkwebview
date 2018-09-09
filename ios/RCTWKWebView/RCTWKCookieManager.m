@@ -13,7 +13,7 @@
 
 RCT_EXPORT_MODULE();
 
-RCT_EXPORT_METHOD(setCookie:(NSString *)name value:(NSString*)value url:(NSString*)urlString resolve:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setCookie:(NSString * _Nonnull)name value:(NSString* _Nonnull)value maximumAge:(NSNumber* _Nonnull)maximumAge url:(NSString* _Nonnull)urlString resolve:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
     NSURL* url = [NSURL URLWithString:urlString];
     
@@ -21,7 +21,8 @@ RCT_EXPORT_METHOD(setCookie:(NSString *)name value:(NSString*)value url:(NSStrin
                            url.host, NSHTTPCookieDomain,
                            url.path, NSHTTPCookiePath,
                            name, NSHTTPCookieName,
-                           value,NSHTTPCookieValue,nil];
+                           value,NSHTTPCookieValue,
+                           [maximumAge stringValue], NSHTTPCookieMaximumAge, nil];
     
     NSHTTPCookie* newCookie = [NSHTTPCookie cookieWithProperties:props];
     
