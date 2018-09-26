@@ -31,6 +31,12 @@ export default class example extends Component {
     this.setState({source: { uri: 'https://example.org/?'+rand }});
   }
 
+  async clearAllCookies(){
+    let rand = Math.random()
+    await WKCookieManager.clearAllCookies()
+    this.setState({source: { uri: 'https://example.org/?'+rand }});
+  }
+
   render() {
     return (
       <View style={{ flex: 1, marginTop: 20 }}>
@@ -47,6 +53,7 @@ export default class example extends Component {
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.setCookie.bind(this)}>Set Cookie</Text>
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.getCookie.bind(this)}>Get Cookie</Text>
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.clearCookie.bind(this)}>Clear Cookie</Text>
+        <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={this.clearAllCookies.bind(this)}>Clear All Cookies</Text>
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={() => this.webview.reload()}>Reload</Text>
         <Text style={{ fontWeight: 'bold', padding: 10 }} onPress={() => this.webview.postMessage("Hello from React Native")}>Post Message</Text>
       </View>

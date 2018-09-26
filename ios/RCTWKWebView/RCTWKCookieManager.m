@@ -51,24 +51,47 @@ RCT_EXPORT_METHOD(clearCookies:(NSString *)urlString resolve:(RCTPromiseResolveB
                 for( NSHTTPCookie* cookie in cookies ){
                     if([cookie.domain isEqualToString:url.host]){
                         [cookiesToRemove addObject:cookie];
-                        
                     }
                 }
-                __block NSUInteger cookiesCleared = 0;
-                __block NSUInteger cookiesLength = [cookiesToRemove count];
                 for( NSHTTPCookie* cookie in cookiesToRemove ){
+                    dispatch_semaphore_t cookieSemaphore = dispatch_semaphore_create(0);
                     [wkCookieStore deleteCookie:cookie completionHandler:^{
-                        cookiesCleared++;
-                        if (cookiesCleared == cookiesLength){
-                            resolve(nil);
-                        }
+                        dispatch_semaphore_signal(cookieSemaphore);
                     }];
+                    dispatch_semaphore_wait(cookieSemaphore, DISPATCH_TIME_FOREVER);
                 }
+                resolve(nil);
             }];
         });
     }else {
         NSURL* url = [NSURL URLWithString:urlString];
         NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:url];
+        for( NSHTTPCookie* cookie in cookies ){
+            [[NSHTTPCookieStorage sharedHTTPCookieStorage] deleteCookie:cookie];
+        }
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        resolve(nil);
+    }
+}
+
+RCT_EXPORT_METHOD(clearAllCookies:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+{
+    if (@available(iOS 11, *)) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            WKHTTPCookieStore* wkCookieStore = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
+            [wkCookieStore getAllCookies:^(NSArray<NSHTTPCookie *> * _Nonnull cookies) {
+                for( NSHTTPCookie* cookie in cookies ){
+                    dispatch_semaphore_t cookieSemaphore = dispatch_semaphore_create(0);
+                    [wkCookieStore deleteCookie:cookie completionHandler:^{
+                        dispatch_semaphore_signal(cookieSemaphore);
+                    }];
+                    dispatch_semaphore_wait(cookieSemaphore, DISPATCH_TIME_FOREVER);
+                }
+                resolve(nil);
+            }];
+        });
+    }else {
+        NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies];;
         for( NSHTTPCookie* cookie in cookies ){
             [[NSHTTPCookieStorage sharedHTTPCookieStorage] deleteCookie:cookie];
         }
