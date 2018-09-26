@@ -3443,8 +3443,9 @@ react-devtools-core@3.1.0:
     shell-quote "^1.6.1"
     ws "^2.0.3"
 
-"react-native-wkwebview-reborn@file:..":
+react-native-wkwebview-reborn@rocketinsights/react-native-wkwebview#kyleshank/cookies:
   version "1.21.0"
+  resolved "https://codeload.github.com/rocketinsights/react-native-wkwebview/tar.gz/1aef0ba8e61a1f917fcdcc9330213cea2122e6a3"
   dependencies:
     fbjs "^0.8.3"
 

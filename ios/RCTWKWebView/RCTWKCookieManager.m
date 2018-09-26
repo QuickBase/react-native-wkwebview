@@ -54,11 +54,7 @@ RCT_EXPORT_METHOD(clearCookies:(NSString *)urlString resolve:(RCTPromiseResolveB
                     }
                 }
                 for( NSHTTPCookie* cookie in cookiesToRemove ){
-                    dispatch_semaphore_t cookieSemaphore = dispatch_semaphore_create(0);
-                    [wkCookieStore deleteCookie:cookie completionHandler:^{
-                        dispatch_semaphore_signal(cookieSemaphore);
-                    }];
-                    dispatch_semaphore_wait(cookieSemaphore, DISPATCH_TIME_FOREVER);
+                    [wkCookieStore deleteCookie:cookie completionHandler:nil];
                 }
                 resolve(nil);
             }];
@@ -81,11 +77,7 @@ RCT_EXPORT_METHOD(clearAllCookies:(RCTPromiseResolveBlock)resolve rejecter:(RCTP
             WKHTTPCookieStore* wkCookieStore = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
             [wkCookieStore getAllCookies:^(NSArray<NSHTTPCookie *> * _Nonnull cookies) {
                 for( NSHTTPCookie* cookie in cookies ){
-                    dispatch_semaphore_t cookieSemaphore = dispatch_semaphore_create(0);
-                    [wkCookieStore deleteCookie:cookie completionHandler:^{
-                        dispatch_semaphore_signal(cookieSemaphore);
-                    }];
-                    dispatch_semaphore_wait(cookieSemaphore, DISPATCH_TIME_FOREVER);
+                    [wkCookieStore deleteCookie:cookie completionHandler:nil];
                 }
                 resolve(nil);
             }];

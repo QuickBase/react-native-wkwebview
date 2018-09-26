@@ -10,7 +10,7 @@
 		"react": "16.3.1",
     	"react-native": "~0.55.2",
 		"prop-types": "^15.6.0",
-		"react-native-wkwebview-reborn": "file:../"
+		"react-native-wkwebview-reborn": "rocketinsights/react-native-wkwebview#kyleshank/cookies"
 	},
 	"devDependencies": {
 		"babel-jest": "19.0.0",

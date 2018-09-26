@@ -28,12 +28,14 @@ export default class example extends Component {
   async clearCookie(){
     let rand = Math.random()
     await WKCookieManager.clearCookies("https://example.org/")
+    console.log("clearCookie")
     this.setState({source: { uri: 'https://example.org/?'+rand }});
   }
 
   async clearAllCookies(){
     let rand = Math.random()
     await WKCookieManager.clearAllCookies()
+    console.log("clearAllCookies")
     this.setState({source: { uri: 'https://example.org/?'+rand }});
   }
 
