@@ -13,7 +13,7 @@
 
 RCT_EXPORT_MODULE();
 
-RCT_EXPORT_METHOD(setCookie:(NSString * _Nonnull)name value:(NSString* _Nonnull)value maximumAge:(NSNumber* _Nonnull)maximumAge url:(NSString* _Nonnull)urlString resolve:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXPORT_METHOD(setCookie:(NSString * _Nonnull)name value:(NSString* _Nonnull)value maximumAge:(NSNumber* _Nonnull)maximumAge secure:(BOOL)secure sessionOnly:(BOOL)sessionOnly httpOnly:(BOOL)httpOnly url:(NSString* _Nonnull)urlString resolve:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject)
 {
     NSURL* url = [NSURL URLWithString:urlString];
     
@@ -22,7 +22,11 @@ RCT_EXPORT_METHOD(setCookie:(NSString * _Nonnull)name value:(NSString* _Nonnull)
                            url.path, NSHTTPCookiePath,
                            name, NSHTTPCookieName,
                            value,NSHTTPCookieValue,
-                           [maximumAge stringValue], NSHTTPCookieMaximumAge, nil];
+                           [maximumAge stringValue], NSHTTPCookieMaximumAge,
+                           (secure ? @"TRUE" : @"FALSE"), NSHTTPCookieSecure,
+                           (sessionOnly ? @"TRUE" : @"FALSE"), NSHTTPCookieDiscard,
+                           (httpOnly ? @"TRUE" : @"FALSE"), @"HttpOnly",
+                           nil];
     
     NSHTTPCookie* newCookie = [NSHTTPCookie cookieWithProperties:props];
     
