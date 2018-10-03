@@ -26,6 +26,7 @@ RCT_EXPORT_METHOD(setCookie:(NSString * _Nonnull)name value:(NSString* _Nonnull)
                            (secure ? @"TRUE" : @"FALSE"), NSHTTPCookieSecure,
                            (sessionOnly ? @"TRUE" : @"FALSE"), NSHTTPCookieDiscard,
                            (httpOnly ? @"TRUE" : @"FALSE"), @"HttpOnly",
+                           @"1", NSHTTPCookieVersion,
                            nil];
     
     NSHTTPCookie* newCookie = [NSHTTPCookie cookieWithProperties:props];
@@ -78,13 +79,13 @@ RCT_EXPORT_METHOD(clearAllCookies:(RCTPromiseResolveBlock)resolve rejecter:(RCTP
 {
     if (@available(iOS 11, *)) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            WKHTTPCookieStore* wkCookieStore = [WKWebsiteDataStore defaultDataStore].httpCookieStore;
-            [wkCookieStore getAllCookies:^(NSArray<NSHTTPCookie *> * _Nonnull cookies) {
-                for( NSHTTPCookie* cookie in cookies ){
-                    [wkCookieStore deleteCookie:cookie completionHandler:nil];
-                }
-                resolve(nil);
-            }];
+            NSSet *websiteDataTypes = [NSSet setWithArray:@[WKWebsiteDataTypeCookies]];
+            NSDate *dateFrom = [NSDate dateWithTimeIntervalSince1970:0];
+            [[WKWebsiteDataStore defaultDataStore] removeDataOfTypes:websiteDataTypes
+                                                       modifiedSince:dateFrom
+                                                   completionHandler: ^ {
+                                                       resolve(nil);
+                                                   }];
         });
     }else {
         NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies];;
