@@ -47,6 +47,7 @@
   BOOL _injectedJavaScriptForMainFrameOnly;
   NSString *_injectJavaScript;
   NSString *_injectedJavaScript;
+  NSString *_injectJavaScriptCookies;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -340,6 +341,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }
     
     NSURLRequest *request = [RCTConvert NSURLRequest:source];
+    
+    // Set javascript cookies to inject
+    [self setJavascriptCookies:request.URL];
+    
     // Because of the way React works, as pages redirect, we actually end up
     // passing the redirect urls back here, so we ignore them if trying to load
     // the same url. We'll expose a call to 'reload' to allow a user to load
@@ -628,6 +633,50 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 
   decisionHandler(WKNavigationResponsePolicyAllow);
+}
+
+#pragma mark - Inject Cookies
+- (void)resetInjectJavaScript{
+  NSMutableString* toInsert = [NSMutableString string];
+  if (_injectJavaScript != nil){
+    [toInsert appendString:_injectJavaScript];
+  }
+  if (_injectJavaScriptCookies != nil){
+    [toInsert appendString:_injectJavaScriptCookies];
+  }
+  self.atStartScript = [[WKUserScript alloc] initWithSource:toInsert
+                                              injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                                           forMainFrameOnly:_injectJavaScriptForMainFrameOnly];
+  [self resetupScripts];
+}
+
+-(void)setJavascriptCookies:(NSURL*)url{
+  if (@available(iOS 11, *)) {
+    // Do nothing
+  }else {
+    NSArray<NSHTTPCookie*>* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:url];
+    NSMutableString* javascriptCookiesString = [NSMutableString string];
+    for(NSHTTPCookie* cookie in [cookies reverseObjectEnumerator]){
+      [javascriptCookiesString appendFormat:@"document.cookie='%@';", [self cookieDescription:cookie]];
+    }
+    _injectJavaScriptCookies = javascriptCookiesString;
+    
+    [self resetInjectJavaScript];
+  }
+}
+
+- (NSString *) cookieDescription:(NSHTTPCookie *)cookie {
+  NSMutableString *cDesc = [[NSMutableString alloc] init];
+  [cDesc appendFormat:@"%@=%@;",
+   [[cookie name] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding],
+   [[cookie value] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+  if ([cookie.domain length] > 0)
+    [cDesc appendFormat:@"domain=%@;", [cookie domain]];
+  if ([cookie.path length] > 0)
+    [cDesc appendFormat:@"path=%@;", [cookie path]];
+  if (cookie.expiresDate != nil)
+    [cDesc appendFormat:@"expiresDate=%@;", [cookie expiresDate]];
+  return cDesc;
 }
 
 @end
