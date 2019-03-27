@@ -38,9 +38,9 @@
 		097457AD1D2A4595000D9368 /* CRAWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.objc; path = CRAWKWebView.m; sourceTree = "<group>"; tabWidth = 2; };
 		3E609CF41EAA815D00187C8C /* WeakScriptMessageDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakScriptMessageDelegate.h; sourceTree = "<group>"; };
 		3E609CF51EAA815D00187C8C /* WeakScriptMessageDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WeakScriptMessageDelegate.m; sourceTree = "<group>"; };
+		49F1D34E224C0C650048204F /* RNCachingURLProtocol */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RNCachingURLProtocol; sourceTree = "<group>"; };
 		6ACA5528216C2892004F4E2C /* RKTWKCookieManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RKTWKCookieManager.h; sourceTree = "<group>"; };
 		6ACA5529216C2893004F4E2C /* RKTWKCookieManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RKTWKCookieManager.m; sourceTree = "<group>"; };
-		49F1D34E224C0C650048204F /* RNCachingURLProtocol */ = {isa = PBXFileReference; lastKnownFileType = folder; path = RNCachingURLProtocol; sourceTree = "<group>"; };
 		E683F3D32080F2E10005F1F5 /* WKProcessPool+SharedProcessPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WKProcessPool+SharedProcessPool.h"; sourceTree = "<group>"; };
 		E683F3D62080F3400005F1F5 /* WKProcessPool+SharedProcessPool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "WKProcessPool+SharedProcessPool.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,9 +75,9 @@
 		0974579C1D2A440A000D9368 /* RCTWKWebView */ = {
 			isa = PBXGroup;
 			children = (
+				49F1D34E224C0C650048204F /* RNCachingURLProtocol */,
 				6ACA5528216C2892004F4E2C /* RKTWKCookieManager.h */,
 				6ACA5529216C2893004F4E2C /* RKTWKCookieManager.m */,
-				49F1D34E224C0C650048204F /* RNCachingURLProtocol */,
 				097457AC1D2A4595000D9368 /* CRAWKWebView.h */,
 				097457AD1D2A4595000D9368 /* CRAWKWebView.m */,
 				097457A81D2A457C000D9368 /* CRAWKWebViewManager.h */,
